@@ -51,21 +51,21 @@ bool eval(const std::string& expr, double* value, std::string* error) {
 
 TEST(reg_add_and_find) {
     ToolRegistry r;
-    auto t = std::make_unique<NamedTool>("alpha");
+    auto t = std::make_unique<NamedTool>("tool_1");
     Tool* raw = t.get();                        // remember the address before moving
     REQUIRE(r.add(std::move(t)));
     CHECK(r.size() == 1);
-    CHECK(r.find("alpha") == raw);              // same object, not a copy
-    CHECK(r.find("beta") == nullptr);
+    CHECK(r.find("tool_1") == raw);              // same object, not a copy
+    CHECK(r.find("tool_2") == nullptr);
 }
 
 TEST(reg_duplicate_keeps_original) {
     ToolRegistry r;
-    auto first = std::make_unique<NamedTool>("alpha");
+    auto first = std::make_unique<NamedTool>("tool_1");
     Tool* original = first.get();
     REQUIRE(r.add(std::move(first)));
-    CHECK(!r.add(std::make_unique<NamedTool>("alpha")));
-    CHECK(r.find("alpha") == original);
+    CHECK(!r.add(std::make_unique<NamedTool>("tool_1")));
+    CHECK(r.find("tool_1") == original);
     CHECK(r.size() == 1);
 }
 
@@ -108,23 +108,23 @@ TEST(reg_null_rejected) {
     ToolRegistry r;
     CHECK(!r.add(nullptr));                     
     CHECK(r.size() == 0);
-    REQUIRE(r.add(std::make_unique<NamedTool>("alpha")));
+    REQUIRE(r.add(std::make_unique<NamedTool>("tool_1")));
     CHECK(!r.add(nullptr));                     
     CHECK(r.size() == 1);
 }
 
 TEST(reg_find_absent_name) {
     ToolRegistry r;
-    CHECK(r.find("alpha") == nullptr);          
+    CHECK(r.find("tool_1") == nullptr);          
     CHECK(r.size() == 0);
-    REQUIRE(r.add(std::make_unique<NamedTool>("alpha")));
-    CHECK(r.find("beta") == nullptr);          
+    REQUIRE(r.add(std::make_unique<NamedTool>("tool_1")));
+    CHECK(r.find("tool_2") == nullptr);          
     CHECK(r.size() == 1);                       
 }
 
 TEST(reg_for_each_visits_each_once) {
     ToolRegistry r;
-    const std::vector<std::string> names = {"alpha", "beta", "gamma", "delta"};
+    const std::vector<std::string> names = {"tool_1", "tool_2", "tool_3", "tool_4"};
     for (const auto& n : names) {
         REQUIRE(r.add(std::make_unique<NamedTool>(n)));
     }

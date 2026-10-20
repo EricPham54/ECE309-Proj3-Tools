@@ -32,12 +32,12 @@ bool Workspace::resolve(std::string_view user_path, fs::path* out,
         
         const auto n = p.lexically_normal();
 
-        if (!n.empty() && *n.begin() == "..") {
+        if (*n.begin() == "..") {
             *reason = "path escapes the workspace";
             return false;
         }
         
-        if (n.empty() || n == ".") {
+        if (n == ".") {
             *out = root();
         } 
         else {

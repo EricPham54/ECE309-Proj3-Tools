@@ -41,7 +41,9 @@ private:
 // Tokenize with the provided tokenizer, then run YOUR calc_evaluate.
 bool eval(const std::string& expr, double* value, std::string* error) {
     std::vector<CalcToken> tokens;
-    if (!calc_tokenize(expr, &tokens, error)) return false;
+    if (!calc_tokenize(expr, &tokens, error)){
+        return false;
+    }
     return calc_evaluate(tokens, value, error);
 }
 
@@ -136,7 +138,9 @@ TEST(reg_for_each_visits_each_once) {
     for (const auto& n : names) {
         int seen = 0;
         for (const auto& v : visited) {
-            if (v == n) ++seen;
+            if (v == n){
+                ++seen;
+            }
         }
         CHECK(seen == 1);                      
     }
@@ -148,16 +152,22 @@ TEST(reg_10000_tools) {
     bool load_ok = true;
     for (int i = 0; i < 10000; ++i) {
         auto t = std::make_unique<NamedTool>("tool_" + std::to_string(i));
-        if (i == 0) first = t.get();           
+        if (i == 0){
+            first = t.get();  
+        }
         REQUIRE(r.add(std::move(t)));
-        if (r.load_factor() > 1.0) load_ok = false;
+        if (r.load_factor() > 1.0){
+            load_ok = false;
+        }
     }
     CHECK(load_ok);                             
     CHECK(r.size() == 10000);
 
     bool all_found = true;
     for (int i = 0; i < 10000; ++i) {
-        if (r.find("tool_" + std::to_string(i)) == nullptr) all_found = false;
+        if (r.find("tool_" + std::to_string(i)) == nullptr){
+            all_found = false;
+        }
     }
     CHECK(all_found);                           
     CHECK(r.find("tool_0") == first);           

@@ -198,7 +198,7 @@ TEST(reg_alternative_hash) {
     CHECK(r.max_probe_length() < static_cast<std::size_t>(weak_longest));
 }
 
-TEST(ws_normalizes_dot_and_slashes) {
+TEST(ws_dot_and_slashes) {
     TempDir d;
     Workspace ws(d.path());
     fs::path out;

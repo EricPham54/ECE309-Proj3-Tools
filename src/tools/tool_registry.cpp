@@ -85,13 +85,13 @@ std::size_t ToolRegistry::max_probe_length() const {
 
 void ToolRegistry::rehash() {
     const std::size_t new_count = buckets_.size() * 2;
-    std::vector<std::vector<std::unique_ptr<Tool>>> fresh(new_count);
+    std::vector<std::vector<std::unique_ptr<Tool>>> newTable(new_count);
 
     for (auto& bucket : buckets_) {
         for (auto& t : bucket) {
             const std::size_t i = index_for(t->name(), new_count);
-            fresh[i].push_back(std::move(t));
+            newTable[i].push_back(std::move(t));
         }
     }
-    buckets_ = std::move(fresh);
+    buckets_ = std::move(newTable);
 }

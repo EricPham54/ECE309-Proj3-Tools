@@ -25,10 +25,14 @@ std::size_t ToolRegistry::index_for(std::string_view key, std::size_t bucket_cou
 }
 
 bool ToolRegistry::add(std::unique_ptr<Tool> tool) {
-    if (!tool) return false;
+    if (!tool){
+        return false;
+    }
 
     const std::string key = tool->name();
-    if (find(key) != nullptr) return false;     
+    if (find(key) != nullptr){
+        return false;     
+    }
 
     while (static_cast<double>(size_ + 1) / static_cast<double>(buckets_.size()) > kMaxLoad)
         rehash();
@@ -41,7 +45,9 @@ bool ToolRegistry::add(std::unique_ptr<Tool> tool) {
 Tool* ToolRegistry::find(std::string_view name) const {
     const auto& bucket = buckets_[index_for(name, buckets_.size())];
     for (const auto& t : bucket) {
-        if (t->name() == name) return t.get();
+        if (t->name() == name){
+            return t.get();
+        }
     }
     return nullptr;
 }
@@ -52,7 +58,9 @@ std::size_t ToolRegistry::size() const noexcept {
 
 void ToolRegistry::for_each(const std::function<void(const Tool&)>& fn) const {
     for (const auto& bucket : buckets_) {
-        for (const auto& t : bucket) fn(*t);
+        for (const auto& t : bucket){
+            fn(*t);
+        }
     }
 }
 
@@ -68,7 +76,9 @@ double ToolRegistry::load_factor() const noexcept {
 std::size_t ToolRegistry::max_probe_length() const {
     std::size_t longest = 0;
     for (const auto& bucket : buckets_) {
-        if (bucket.size() > longest) longest = bucket.size();
+        if (bucket.size() > longest){
+            longest = bucket.size();
+        }
     }
     return longest;
 }

@@ -72,7 +72,9 @@ private:
     static constexpr std::size_t kInitialBuckets = 1; 
     static constexpr double      kMaxLoad        = 0.75; 
 
+    // Creates the index for a new entry into the hash table after getting hashed
     static std::size_t index_for(std::string_view key, std::size_t bucket_count) noexcept;
 
+    // Rehases the elements of a hash table when resizing
     void rehash();
 };

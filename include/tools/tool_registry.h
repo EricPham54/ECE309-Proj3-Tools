@@ -66,10 +66,14 @@ public:
     static std::size_t hash(std::string_view key) noexcept;
 
 private:
+    // member data for the hash table (vectors of vectors of unique pointers to tool objects) with name based on other starting files
     std::vector<std::vector<std::unique_ptr<Tool>>> buckets_;
+    // member data for the size of the hash table (number of elements) with name based on other starting files
     std::size_t size_ = 0;
 
+    // member data for the number of starting buckets (constant because it doesn't change) with name based on other starting files
     static constexpr std::size_t kInitialBuckets = 1; 
+    // member data for the load factor (constant because it doesn't change) with name based on other starting files
     static constexpr double      kMaxLoad        = 0.75; 
 
     // Creates the index for a new entry into the hash table after getting hashed

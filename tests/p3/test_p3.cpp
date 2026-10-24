@@ -106,97 +106,106 @@ TEST(calc_division_by_zero) {
 //   ws_<case>                     REQUIRED: every row of the table in spec §4.4
 //   calc_<case>                   left-to-right, parentheses, negatives
 
+// checks to see what will happen if null tool was rejected
 TEST(reg_null_rejected) {
-    ToolRegistry r;
-    CHECK(!r.add(nullptr));                     
+    ToolRegistry r;                                                                     // example registry (same name for other ToolRegsitry tests)
+    CHECK(!r.add(nullptr));                                                             // adds null on an empty registry
     CHECK(r.size() == 0);
-    REQUIRE(r.add(std::make_unique<NamedTool>("tool_1")));
-    CHECK(!r.add(nullptr));                     
+    REQUIRE(r.add(std::make_unique<NamedTool>("tool_1")));                              // adds actual tool
+    CHECK(!r.add(nullptr));                                                             // adds null on a non-empty registry
     CHECK(r.size() == 1);
 }
 
+// checks to see what will happen if ToolRegistry::find has correct behavior
 TEST(reg_find_absent_name) {
-    ToolRegistry r;
-    CHECK(r.find("tool_1") == nullptr);          
+    ToolRegistry r;                                                                     // example registry (same name for other ToolRegsitry tests)
+    CHECK(r.find("tool_1") == nullptr);                                                 // checks if find returns nullptr for empty registry
     CHECK(r.size() == 0);
-    REQUIRE(r.add(std::make_unique<NamedTool>("tool_1")));
-    CHECK(r.find("tool_2") == nullptr);          
-    CHECK(r.size() == 1);                       
+    REQUIRE(r.add(std::make_unique<NamedTool>("tool_1")));                              // adds tool
+    CHECK(r.find("tool_2") == nullptr);                                                 // checks if find returns nullptr for non-added tool in non-empty registry
+    CHECK(r.size() == 1);
 }
 
+// checks behavior of using ToolRegistry::for_each
 TEST(reg_for_each_visits_each_once) {
-    ToolRegistry r;
-    const std::vector<std::string> names = {"tool_1", "tool_2", "tool_3", "tool_4"};
+    ToolRegistry r;                                                                     // example registry (same name for other ToolRegsitry tests)
+    const std::vector<std::string> names = {"tool_1", "tool_2", "tool_3", "tool_4"};    // example tools added using a for-loop
     for (const auto& n : names) {
         REQUIRE(r.add(std::make_unique<NamedTool>(n)));
     }
 
-    std::vector<std::string> visited;
-    r.for_each([&](const Tool& t) { visited.push_back(t.name()); });
+    std::vector<std::string> visited;                                                   // creates visited vector to see if each tool has been visited
+    r.for_each([&](const Tool& t) { visited.push_back(t.name()); });                    // lambda for for_each function to see if each tool was visited
 
-    CHECK(visited.size() == names.size());     
-    for (const auto& n : names) {
+    CHECK(visited.size() == names.size());
+    for (const auto& n : names) {                                                       // checks to see if each name actually got visited using a nested for-loop traversing the names vector and visited vector 
         int seen = 0;
         for (const auto& v : visited) {
-            if (v == n){
+            if (v == n) {
                 ++seen;
             }
         }
-        CHECK(seen == 1);                      
+        CHECK(seen == 1);                                                               // checks if the tools correlate between the two registries
     }
 }
 
+// checks behavior of ToolRegistry after adding 10000 tools
 TEST(reg_10000_tools) {
-    ToolRegistry r;
+    ToolRegistry r;                                                                    // example registry (same name for other ToolRegsitry tests)
     Tool* first = nullptr;
     bool load_ok = true;
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 10000; ++i) {                                                   // adds 10000 tools with unique names to the tool registry
         auto t = std::make_unique<NamedTool>("tool_" + std::to_string(i));
         if (i == 0){
-            first = t.get();  
+            first = t.get();                                                            // remembers the address before moving first tool
         }
-        REQUIRE(r.add(std::move(t)));
-        if (r.load_factor() > 1.0){
+        REQUIRE(r.add(std::move(t)));                                                   // moves tool to r registry
+        if (r.load_factor() > 1.0){                                                     // checks if load factor is greater than 1
             load_ok = false;
         }
     }
-    CHECK(load_ok);                             
-    CHECK(r.size() == 10000);
+    CHECK(load_ok);                                                                     // load_factor() should be less than 1
+    CHECK(r.size() == 10000);                                                           // checks to see if the tool registry has 10000 elements
 
-    bool all_found = true;
-    for (int i = 0; i < 10000; ++i) {
+    bool all_found = true;                                                              // creates boolean variable to see if all variables are found after check
+    for (int i = 0; i < 10000; ++i) {                                                   // for-loop to see if all tools actually got added with the correct names
         if (r.find("tool_" + std::to_string(i)) == nullptr){
             all_found = false;
         }
     }
-    CHECK(all_found);                           
-    CHECK(r.find("tool_0") == first);           
-    CHECK(r.max_probe_length() <= 64);
+    CHECK(all_found);                                                                   // echecks if all 10000 elements are found
+    CHECK(r.find("tool_0") == first);                                                   // checks if the first tool is still maintained
+    CHECK(r.max_probe_length() <= 64);                                                  // checks if the max chain length is less than 64
 
-    std::printf("reg_10000_tools: bucket_count=%zu load_factor=%f max_probe_length=%zu\n",
+    std::printf("reg_10000_tools: bucket_count=%zu load_factor=%f max_probe_length=%zu\n",  // prints out the numbers needed from the P3_spec
                 r.bucket_count(), r.load_factor(), r.max_probe_length());
 }
 
+// checks behavior of alternate hashing method
 TEST(reg_alternative_hash) {
-    ToolRegistry r;
-    for (int i = 0; i < 10000; ++i) {
+    ToolRegistry r;                                                                     // example registry (same name for other ToolRegsitry tests)
+    for (int i = 0; i < 10000; ++i) {                                                   // adds 10000 tools with unique names to the tool registry
         REQUIRE(r.add(std::make_unique<NamedTool>("tool_" + std::to_string(i))));
     }
 
-    std::vector<int> counts(r.bucket_count(), 0);
-    int weak_longest = 0;
-    for (int i = 0; i < 10000; ++i) {
+    std::vector<int> counts(r.bucket_count(), 0);                                       // vector/array of ints to keep track of the count of buckets
+    int weak_longest = 0;                                                               // checking variable for the longest chain of weak hashing hash table
+    for (int i = 0; i < 10000; ++i) {                                                   // creates behavior of theoretical weak hashing method and checking what the longest chain would theroetically be
         const std::string s = "tool_" + std::to_string(i);
         const std::size_t h = static_cast<std::size_t>(s[0]) + s.size();
         const int c = ++counts[h % counts.size()];
-        if (c > weak_longest) weak_longest = c;
+        if (c > weak_longest){                                                          // update weak_longest if a chain reaches a new highest length
+            weak_longest = c;
+        }
     }
 
-    std::printf("reg_alternative_hash: bucket_count=%zu  real max_probe_length=%zu  "
+    std::printf("reg_alternative_hash: bucket_count=%zu  real max_probe_length=%zu  "   // print alternative hashing method numbers
                 "weak hash (s[0] + s.size()) longest chain=%d\n",
                 r.bucket_count(), r.max_probe_length(), weak_longest);
-    CHECK(r.max_probe_length() < static_cast<std::size_t>(weak_longest));
+    CHECK(r.max_probe_length() < static_cast<std::size_t>(weak_longest));               // checks the different chain lengths of the different hashing methods
 }
+
+// workspace tests from table in §4.4 of the P3_spec
 
 TEST(ws_dot_and_slashes) {
     TempDir d;
@@ -213,9 +222,9 @@ TEST(ws_dot_and_dotdot_pairs) {
     fs::path out;
     std::string reason;
     REQUIRE(ws.resolve(".", &out, &reason));
-    CHECK(out == ws.root());                    
+    CHECK(out == ws.root());
     REQUIRE(ws.resolve("a/..", &out, &reason));
-    CHECK(out == ws.root());                    
+    CHECK(out == ws.root());
     REQUIRE(ws.resolve("a/../b", &out, &reason));
     CHECK(out == ws.root() / "b");
 }
@@ -236,7 +245,7 @@ TEST(ws_accepts_dots_in_name) {
     fs::path out;
     std::string reason;
     REQUIRE(ws.resolve("my..notes.txt", &out, &reason));
-    CHECK(out == ws.root() / "my..notes.txt"); 
+    CHECK(out == ws.root() / "my..notes.txt");
 }
 
 TEST(ws_rejects_empty) {
@@ -281,7 +290,7 @@ TEST(ws_rejects_dotdot) {
 
 TEST(ws_rejects_escape_that_returns_inside) {
     TempDir d;
-    fs::create_directories(d.path() / "ws");
+    fs::create_directories(d.path() / "ws");                                            // the P3_spec table row assumes the root is named "ws"
     Workspace ws(d.path() / "ws");
     REQUIRE(ws.root().filename() == "ws");
     fs::path out;
@@ -289,6 +298,8 @@ TEST(ws_rejects_escape_that_returns_inside) {
     CHECK(!ws.resolve("notes/../../ws/notes/todo.txt", &out, &reason));
     CHECK(!reason.empty());
 }
+
+// calculator tests from table in §4.6 of the P3_spec
 
 TEST(calc_left_to_right) {
     double v = 0;
